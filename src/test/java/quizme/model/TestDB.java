@@ -3,22 +3,22 @@ package quizme.model;
 import static com.googlecode.objectify.ObjectifyService.ofy;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-
-import javax.jdo.Query;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import quizme.persistence.JDODao;
 import quizme.persistence.ObjectifyDao;
-import quizme.persistence.PMF;
 
 import com.google.appengine.tools.development.testing.LocalDatastoreServiceTestConfig;
 import com.google.appengine.tools.development.testing.LocalServiceTestHelper;
 import com.googlecode.objectify.ObjectifyService;
+import com.googlecode.objectify.annotation.Entity;
 
 public class TestDB {
 
@@ -32,7 +32,7 @@ public class TestDB {
 		toStore = new ArrayList<>();
 
 		helper.setUp();
-		setUpObjectify();
+//		setUpObjectify();
 		prepareQuestion();
 	}
 
@@ -54,32 +54,62 @@ public class TestDB {
 	}
 
 	@Test
-	public void testJDO() throws QuizException {
-		persistQuestionJDO();
-		queryJDO();
-	}
-
-	@Test
 	public void testObjectify() throws QuizException {
 		persistQuestionObjectify();
 		queryObjectify();
 	}
 	
-	private void persistQuestionJDO() throws QuizException {
-		System.out.println("****** JDO Store ********");
-		new JDODao().storeObjects(toStore.toArray());
-	}
-
 	private void persistQuestionObjectify() throws QuizException {
 		System.out.println("****** Objectify Store ********");
 		new ObjectifyDao().storeObjects(toStore.toArray());
 	}
 
-	private void prepareQuestion() throws QuizException {
+	private Question prepareQuestion() throws QuizException {
 		Question q = new Question();
 		q.setType(QuestionType.SINGLE);
-
+		
+		Classification subject = new Classification();
+		subject.setName("Chemistry");
+		subject.setType(ClassificationType.SUBJECT);
+				
+		q.setCategory(subject);
+		
+		
 		toStore.add(q);
+		return q;
+	}
+	
+	@Test
+	public void testReflection() throws IllegalArgumentException, IllegalAccessException, QuizException{
+		persistObject(prepareQuestion());
+	}
+	
+	private void persistObject(Object obj) throws IllegalArgumentException, IllegalAccessException{
+		if (!isEntity(obj))
+			return;
+
+		for (Field f : obj.getClass().getDeclaredFields()){
+			if (Collection.class.isAssignableFrom(f.getType())){
+				for (Object elem : (Collection<?>) f.get(obj)){
+					persistObject(elem);
+				}
+			}
+			
+			System.out.println(" **** Persisting " + f.getName() + " ***** ");
+			persistObject(f.get(obj));
+		}
+		
+		System.out.println(" **** Saving " + obj.getClass().getCanonicalName() + " ***** ");
+		ofy().save().entities(obj).now();
+	}
+	
+	private boolean isEntity(Object obj){
+		for (Annotation annotation : obj.getClass().getDeclaredAnnotations()){
+			if (Entity.class.isAssignableFrom(annotation.annotationType())){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private void prepareQuestion2() throws QuizException {
@@ -112,27 +142,7 @@ public class TestDB {
 		toStore.add(o3);
 		toStore.add(o4);
 	}
-
-	private void queryJDO() throws QuizException {
-		System.out.println("****** JDO Query ********");
-		Query q = PMF.get().getPersistenceManager().newQuery(Question.class);
-		q.setFilter("type == typeParam");
-		q.declareParameters("String typeParam");
-
-		try {
-			List<Question> results = (List<Question>) q.execute("SINGLE");
-			if (!results.isEmpty()) {
-				for (Question p : results) {
-					System.out.println(p.getType());
-				}
-			} else {
-				System.out.println("No results");
-			}
-		} finally {
-			q.closeAll();
-		}
-	}
-
+	
 	private void queryObjectify() throws QuizException {
 		System.out.println("****** Objectify Query ********");
 		List<Question> questions = ofy().load().type(Question.class).filter("type", "SINGLE").list();

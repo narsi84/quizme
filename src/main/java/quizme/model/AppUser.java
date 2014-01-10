@@ -2,44 +2,25 @@ package quizme.model;
 
 import java.util.Date;
 
-import javax.jdo.annotations.PersistenceCapable;
-import javax.jdo.annotations.Persistent;
-
-import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.EntitySubclass;
 
 /**
  * Class to store user details
+ * 
  * @author narsir
- *
+ * 
  */
 
-@PersistenceCapable
-@Entity
-public class AppUser {
+@EntitySubclass
+public class AppUser extends BaseEntity {
 
-	@Persistent
-	@Id
-	private Long id;
-	
-	@Persistent
 	private String email;
-	
-	@Persistent
-	private String userId;
-	
-	@Persistent
-	private Date joiningDate;
-	
-	private AppUser(){	
-	}
-	
-	public Long getId() {
-		return id;
-	}
 
-	public void setId(Long id) {
-		this.id = id;
+	private String userId;
+
+	private Date joiningDate;
+
+	private AppUser() {
 	}
 
 	public String getEmail() {

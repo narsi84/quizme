@@ -3,92 +3,69 @@ package quizme.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.jdo.annotations.IdGeneratorStrategy;
-import javax.jdo.annotations.PersistenceCapable;
-import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
-
 import quizme.utils.ObjectifyUtils;
 
-import com.google.appengine.datanucleus.annotations.Unowned;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
-import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.EntitySubclass;
 import com.googlecode.objectify.annotation.Parent;
 
-@PersistenceCapable
-@Entity
-public class Option {
+@EntitySubclass
+public class Option extends BaseEntity {
 
-	@PrimaryKey
-    @Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
-	@Id
-	private Long id;
-	
-	@Persistent
-	@Unowned
 	@Parent
 	private Key<Question> question;
 
-	@Persistent 
 	// The list is used only for questions of type MATCH. For all other types,
 	// this list will have only 1 element. MATCH questions will rely on the
 	// MULTIPARTCOMPONENT key ids
 	private List<Ref<MultiPartContent>> content;
 
-	@Persistent
 	// Indicates the order in a question of type ORDER
 	private int order;
 
-	@Persistent
 	// This will indicate if an option is the correct. Used by QuestionType
 	// SINGLE and MULTI.
 	private boolean isCorrect;
 
-	public Option(Question _question) throws QuizException{
+	public Option(Question _question) throws QuizException {
 		if (_question == null)
-			throw new QuizException("Trying to create option without associated question");
-		
+			throw new QuizException(
+					"Trying to create option without associated question");
+
 		content = new ArrayList<Ref<MultiPartContent>>();
 	}
-	
-	public Option(Question _question, List<MultiPartContent> _contents) throws QuizException{
+
+	public Option(Question _question, List<MultiPartContent> _contents)
+			throws QuizException {
 		this(_question);
-		
+
 		if (_contents == null || _contents.size() == 0)
 			throw new QuizException("Trying to create option without content");
-		
-		for(MultiPartContent c : _contents)
+
+		for (MultiPartContent c : _contents)
 			content.add(Ref.create(c));
-		}
-	
-	public Option(Question _question, MultiPartContent... _contents) throws QuizException{
-		this(_question);
-		
-		if (_contents == null || _contents.length == 0)
-			throw new QuizException("Trying to create option without content");
-		
-		for(MultiPartContent c : _contents)
-			content.add(Ref.create(c));
-	}
-	
-	public Long getId() {
-		return id;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public Option(Question _question, MultiPartContent... _contents)
+			throws QuizException {
+		this(_question);
+
+		if (_contents == null || _contents.length == 0)
+			throw new QuizException("Trying to create option without content");
+
+		for (MultiPartContent c : _contents)
+			content.add(Ref.create(c));
 	}
 
 	public Key<Question> getQuestion() {
 		return question;
 	}
-	
+
 	public void setQuestion(Key<Question> question) {
 		this.question = question;
 	}
-	
+
 	public List<MultiPartContent> getContent() {
 		return ObjectifyUtils.getDomainList(content);
 	}

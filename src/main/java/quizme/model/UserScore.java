@@ -1,69 +1,38 @@
 package quizme.model;
 
-import javax.jdo.annotations.IdGeneratorStrategy;
-import javax.jdo.annotations.PersistenceCapable;
-import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
-
-import com.google.appengine.datanucleus.annotations.Unowned;
 import com.googlecode.objectify.Ref;
-import com.googlecode.objectify.annotation.Entity;
-import com.googlecode.objectify.annotation.Id;
+import com.googlecode.objectify.annotation.EntitySubclass;
 import com.googlecode.objectify.annotation.Load;
 
 /**
  * Class to store user score and contributions by category and subject
+ * 
  * @author narsir
- *
+ * 
  */
 
-@PersistenceCapable
-@Entity
-public class UserScore {
+@EntitySubclass
+public class UserScore extends BaseEntity {
 
-	@PrimaryKey
-    @Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
-	@Id
-	private Long id;
-	
-	@Persistent
-	@Unowned	
 	@Load
 	private Ref<AppUser> user;
-	
-	@Persistent
-	@Unowned
+
 	@Load
 	private Ref<Classification> subject;
-	
-	@Persistent 
-	@Unowned
+
 	@Load
 	private Ref<Classification> category;
-	
-	@Persistent
-	@Unowned
+
 	@Load
 	private Ref<Classification> subCategory;
-	
-	@Persistent
+
 	private long numAnswered;
-	
-	@Persistent
+
 	private long numCorrect;
-	
-	@Persistent
+
 	private long numContributed;
 
 	private UserScore() {
-	}
-	
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public long getNumAnswered() {
